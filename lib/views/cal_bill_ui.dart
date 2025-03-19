@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:iot_mukata_project/views/show_bill_ui.dart';
 
 class CallBillUI extends StatefulWidget {
   const CallBillUI({super.key});
@@ -54,6 +55,30 @@ class _CallBillUIState extends State<CallBillUI> {
     setState(() {
       imgFile = File(image.path);
     });
+  }
+
+  //สร้างเมธอดแจ้งเตือน
+  Future<void> showWarningDialog(context, msg) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('คำเตือน'),
+          content: Text(
+            msg,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('ตกลง'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -351,7 +376,64 @@ class _CallBillUIState extends State<CallBillUI> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          if (isAdult == true && adultCtrl.text.isEmpty ||
+                              adultCtrl.text == '0') {
+                            showWarningDialog(
+                                context, 'กรุณากรอกจํานวนผู้ใหญ่ด้วย');
+                          } else if (isChild == true &&
+                                  childCtrl.text.isEmpty ||
+                              adultCtrl.text == '0') {
+                            showWarningDialog(
+                                context, 'กรุณากรอกจํานวนเด็กด้วย');
+                          } else {
+                            //คำนวณเงิน
+                            //เตรียมข้อมูลที่ใช้คำนวณ
+                            int numAdult =
+                                isAdult == true ? int.parse(adultCtrl.text) : 0;
+                            int numChild =
+                                isChild == true ? int.parse(childCtrl.text) : 0;
+                            int numCoke = cokeCtrl.text.isEmpty
+                                ? 0
+                                : int.parse(cokeCtrl.text);
+                            int numPure = pureCtrl.text.isEmpty
+                                ? 0
+                                : int.parse(pureCtrl.text);
+                            double sale = 0.0;
+                            if (_selectedMember == 'สมาชิกทั่วไปลด 10%') {
+                              sale = 0.1;
+                            } else if (_selectedMember == 'สมาชิก VIP ลด 20%') {
+                              sale = 0.2;
+                            }
+                            double payWaterBuffet = groupWater == 1
+                                ? 25.0 * (numAdult + numChild)
+                                : 0.0;
+                            double payBuffetTotalNoSale = (numAdult * 299.0) +
+                                (numChild * 69.0) +
+                                (numCoke * 20.0) +
+                                (numPure * 15.0) +
+                                payWaterBuffet;
+                            double paySale = payBuffetTotalNoSale * sale;
+                            double payBuffetTotal =
+                                payBuffetTotalNoSale - paySale;
+                            //แสดงผลไปยังShowBillUI()
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ShowBillUI(
+                                    numAdult: numAdult,
+                                    numChild: numChild,
+                                    numCoke: numCoke,
+                                    numPure: numPure,
+                                    payWaterBuffet: payWaterBuffet,
+                                    payBuffetTotalNoSale: payBuffetTotalNoSale,
+                                    paySale: paySale,
+                                    payBuffetTotal: payBuffetTotal,
+                                    imgFile: imgFile,
+                                  ),
+                                ));
+                          }
+                        },
                         icon: Icon(
                           Icons.calculate,
                           color: Colors.white,
