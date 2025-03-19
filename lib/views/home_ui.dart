@@ -18,7 +18,7 @@ class _HomeUIState extends State<HomeUI> {
 
   //สร้างตัวแปรเก็บค่า index ของ pageที่แสดง เพจแรกคือ 1 สร้างเป็น List
   List<Widget> itemUIShow = [
-    CalBillUI(),
+    CallBillUI(),
     MenuUI(),
     AboutUI(),
   ];
